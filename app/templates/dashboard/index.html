@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Overview{% endblock %}
+{% block page_title %}LifePilot Dashboard{% endblock %}
+
+{% block content %}
+<!-- KPI Metrics Grid -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-icon icon-green"><i class="fa-solid fa-chart-line"></i></div>
+    <div class="metric-data">
+      <span class="metric-label">Predicted Productivity</span>
+      <span class="metric-value">
+        {% if latest_prediction %}
+          {{ latest_prediction.predicted_productivity_score }}/100
+        {% elif averages and averages.avg_productivity %}
+          {{ "%.1f"|format(averages.avg_productivity) }}/100
+        {% else %}
+          No data yet
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon icon-purple"><i class="fa-solid fa-bed"></i></div>
+    <div class="metric-data">
+      <span class="metric-label">Avg Sleep Duration</span>
+      <span class="metric-value">
+        {% if averages and averages.avg_sleep %}
+          {{ "%.1f"|format(averages.avg_sleep) }} hrs
+        {% else %}
+          No data yet
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon icon-blue"><i class="fa-solid fa-briefcase"></i></div>
+    <div class="metric-data">
+      <span class="metric-label">Avg Work Output</span>
+      <span class="metric-value">
+        {% if averages and averages.avg_work %}
+          {{ "%.1f"|format(averages.avg_work) }} hrs
+        {% else %}
+          No data yet
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon icon-yellow"><i class="fa-solid fa-list-check"></i></div>
+    <div class="metric-data">
+      <span class="metric-label">Pending Tasks</span>
+      <span class="metric-value">{{ task_summary.pending_count or 0 }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Main Dashboard Grid -->
+<div class="dashboard-grid">
+  <!-- Trend Analytics Chart -->
+  <div class="col-8">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-arrow-trend-up" style="color: var(--accent-primary);"></i> Productivity & Habit History</h3>
+        <a href="{{ url_for('productivity.analysis') }}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Full ML Analytics</a>
+      </div>
+      {% if recent_records %}
+      <div class="chart-container">
+        <canvas id="trendChart"></canvas>
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: 3.5rem 1rem; color: var(--text-muted);">
+        <i class="fa-solid fa-chart-line" style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--border-color); display: block;"></i>
+        <p>No daily records available yet.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Behavior Persona & AI Insights -->
+  <div class="col-4">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-shapes" style="color: var(--accent-secondary);"></i> Behavioral Persona</h3>
+      </div>
+      {% if cluster_persona %}
+      <div class="cluster-card-badge">
+        <i class="fa-solid fa-user-gear" style="font-size: 1.5rem; color: {{ cluster_persona.color }};"></i>
+        <div>
+          <strong style="display: block; font-size: 1rem; color: var(--text-primary);">{{ cluster_persona.name }}</strong>
+          <span style="font-size: 0.85rem; color: var(--text-secondary);">{{ cluster_persona.desc }}</span>
+        </div>
+      </div>
+      {% else %}
+      <p style="color: var(--text-muted); font-size: 0.9rem;">No behavioural data yet. Log your daily metrics to discover your lifestyle pattern.</p>
+      {% endif %}
+      
+      <div style="margin-top: 1.5rem;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text-primary);">
+          <i class="fa-solid fa-lightbulb" style="color: #F59E0B;"></i> AI Life Recommendations
+        </h4>
+        <div class="recommendations-list">
+          {% for rec in ai_recs %}
+            <div class="recommendation-item">{{ rec|safe }}</div>
+          {% else %}
+            <p style="color: var(--text-muted); font-size: 0.88rem;">Log your daily metrics to receive personalized recommendations.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expense Distribution -->
+  <div class="col-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-chart-pie" style="color: #8B5CF6;"></i> Expense Categories Breakdown</h3>
+        <a href="{{ url_for('expenses.index') }}" class="btn btn-outline" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">Manage Expenses</a>
+      </div>
+      {% if expense_categories %}
+      <div class="chart-container" style="height: 250px;">
+        <canvas id="expenseChart"></canvas>
+      </div>
+      {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <i class="fa-solid fa-wallet" style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--border-color); display: block;"></i>
+        <p>No expenses recorded yet.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Pending Tasks Quick Widget -->
+  <div class="col-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-tasks" style="color: var(--accent-primary);"></i> Active Tasks & Priorities</h3>
+        <a href="{{ url_for('ai.index') }}" class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem;">
+          <i class="fa-solid fa-plus"></i> Plan with AI
+        </a>
+      </div>
+      <div class="task-list">
+        {% for task in pending_tasks %}
+        <div class="task-item">
+          <div>
+            <span class="task-title">{{ task.title }}</span>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Est: {{ task.estimated_hours }} hrs | Priority: {{ task.priority }}</div>
+          </div>
+          <span class="badge {% if task.priority == 'High' %}badge-danger{% else %}badge-warning{% endif %}">
+            {{ task.priority }}
+          </span>
+        </div>
+        {% else %}
+        <p style="color: var(--text-muted); font-size: 0.9rem; padding: 1rem 0;">No active tasks. Use AI Assistant to generate a daily plan!</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Render Productivity Trend Line Chart if data exists
+    {% if recent_records %}
+    const trendData = {{ chart_data|tojson }};
+    renderTrendChart('trendChart', trendData);
+    {% endif %}
+
+    // 2. Render Expense Category Doughnut Chart if categories exist
+    {% if expense_categories %}
+    const categories = [{% for c in expense_categories %}"{{ c.category }}",{% endfor %}];
+    const amounts = [{% for c in expense_categories %}{{ c.total_amount }},{% endfor %}];
+    renderExpensePieChart('expenseChart', categories, amounts);
+    {% endif %}
+  });
+</script>
+{% endblock %}

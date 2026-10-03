@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}AI Life Assistant{% endblock %}
+{% block page_title %}AI Life Assistant & Personalized Planner{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+  <!-- Interactive Chat Interface -->
+  <div class="col-8">
+    <div class="chat-container">
+      <div class="chat-header">
+        <div class="chat-avatar"><i class="fa-solid fa-robot"></i></div>
+        <div>
+          <strong style="display: block; font-size: 1rem; color: var(--text-primary);">LifePilot AI Assistant</strong>
+          <span style="font-size: 0.8rem; color: var(--accent-primary);"><i class="fa-solid fa-circle" style="font-size: 0.6rem;"></i> Active & Ready for Natural Language Prompts</span>
+        </div>
+      </div>
+
+      <div class="chat-body" id="chat-body">
+        <!-- Initial Welcome Message -->
+        <div class="chat-bubble assistant-bubble">
+          <p>Hello <strong>{{ session.get('username') }}</strong>! I am your AI Life Assistant. I analyze your tasks, habits, and productivity insights to organize your day and offer personalized recommendations.</p>
+          <p style="margin-top: 0.5rem; font-size: 0.88rem; color: var(--text-secondary);">Try asking me: <em>"Plan my schedule for today"</em>, <em>"How is my productivity looking?"</em>, or <em>"Review my expenses"</em>.</p>
+        </div>
+
+        {% for interaction in chat_history %}
+        <div class="chat-bubble user-bubble">{{ interaction.user_message }}</div>
+        <div class="chat-bubble assistant-bubble">
+          <p>{{ interaction.assistant_response|safe }}</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      <form id="chat-form" class="chat-footer">
+        <input type="text" id="chat-input" class="form-control chat-input" placeholder="Type your message or query in natural language..." required autocomplete="off">
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-paper-plane"></i> Send
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Task & Schedule Sidebar Widget -->
+  <div class="col-4">
+    <!-- Task Planning Widget -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-plus" style="color: var(--accent-primary);"></i> Quick Task Planner</h3>
+      </div>
+      <form action="{{ url_for('ai.add_task') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="title">Task Title</label>
+          <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Finish Q3 Report" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="priority">Priority</label>
+            <select id="priority" name="priority" class="form-select">
+              <option value="High">🔴 High</option>
+              <option value="Medium" selected>🟡 Medium</option>
+              <option value="Low">🟢 Low</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="estimated_hours">Est. Hours</label>
+            <input type="number" step="0.5" min="0.5" max="12" id="estimated_hours" name="estimated_hours" class="form-control" value="1.5">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-outline" style="width: 100%;">
+          <i class="fa-solid fa-cart-plus"></i> Add Task to AI Planner
+        </button>
+      </form>
+    </div>
+
+    <!-- Active Pending Tasks List -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-list-check" style="color: var(--accent-secondary);"></i> Pending Tasks</h3>
+      </div>
+      <div class="task-list">
+        {% for t in pending_tasks %}
+        <div class="task-item">
+          <div>
+            <div style="font-weight: 600; font-size: 0.9rem;">{{ t.title }}</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">{{ t.estimated_hours }} hrs</div>
+          </div>
+          <form action="{{ url_for('ai.complete_task', task_id=t.id) }}" method="POST">
+            <button type="submit" class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+              <i class="fa-solid fa-check" style="color: #10B981;"></i> Done
+            </button>
+          </form>
+        </div>
+        {% else %}
+        <p style="color: var(--text-muted); font-size: 0.88rem;">No pending tasks.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

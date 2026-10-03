@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Expense Manager{% endblock %}
+{% block page_title %}Expense Manager & Spending Analytics{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+  <!-- Add Expense Form -->
+  <div class="col-4">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-plus-circle" style="color: var(--accent-primary);"></i> Log Expense</h3>
+      </div>
+      <form action="{{ url_for('expenses.index') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="expense_date">Date</label>
+          <input type="date" id="expense_date" name="expense_date" class="form-control" value="{{ today_str }}" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="category">Category</label>
+          <select id="category" name="category" class="form-select" required>
+            <option value="Food">🍔 Food & Dining</option>
+            <option value="Transport">🚗 Transport & Commute</option>
+            <option value="Utilities">💡 Utilities & Bills</option>
+            <option value="Entertainment">🎬 Entertainment & Leisure</option>
+            <option value="Health">⚕️ Health & Fitness</option>
+            <option value="Shopping">🛍️ Shopping & Supplies</option>
+            <option value="Other">📦 Other Expenses</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="amount">Amount (₹)</label>
+          <input type="number" step="0.01" min="0.01" id="amount" name="amount" class="form-control" placeholder="450.00" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="description">Description (Optional)</label>
+          <input type="text" id="description" name="description" class="form-control" placeholder="Grocery shopping, coffee...">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+          <i class="fa-solid fa-check"></i> Add Expense Entry
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Breakdown & History Table -->
+  <div class="col-8">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-receipt" style="color: var(--accent-secondary);"></i> Recent Expenses & Category Summary</h3>
+        <span class="badge badge-info" style="font-size: 0.9rem;">Total Logged: ₹{{ "%.2f"|format(total_spent) }}</span>
+      </div>
+
+      <!-- Category Summary Badges -->
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+        {% for cat in category_summary %}
+        <div style="background: var(--bg-main); padding: 0.6rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 0.88rem;">
+          <strong style="color: var(--text-primary);">{{ cat.category }}:</strong>
+          <span style="color: var(--accent-primary); font-weight: 700;">₹{{ "%.2f"|format(cat.total_amount) }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Expense Transactions Table -->
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Amount</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for e in expenses %}
+            <tr>
+              <td>{{ e.expense_date }}</td>
+              <td><span class="badge badge-secondary">{{ e.category }}</span></td>
+              <td>{{ e.description or '-' }}</td>
+              <td><strong style="color: var(--text-primary);">₹{{ "%.2f"|format(e.amount) }}</strong></td>
+              <td>
+                <form action="{{ url_for('expenses.delete', expense_id=e.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Delete this expense entry?');">
+                  <button type="submit" class="btn btn-danger" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">No expenses recorded yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

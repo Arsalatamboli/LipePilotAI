@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}LifePilot AI{% endblock %} - AI Daily Life Assistant</title>
+  <meta name="description" content="LifePilot AI is an AI-powered personal daily-life assistant for productivity prediction, daily behavior clustering, expense management, and smart planning.">
+  
+  <!-- Font Awesome Icons & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom Light/Day Theme CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  {% if session.get('user_id') %}
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <a href="{{ url_for('main.dashboard') }}" class="brand-logo">
+        <div class="brand-icon"><i class="fa-solid fa-compass"></i></div>
+        <span>LifePilot AI</span>
+      </a>
+      
+      <ul class="nav-menu">
+        <li class="nav-item {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+          <a href="{{ url_for('main.dashboard') }}"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+        </li>
+        <li class="nav-item {% if 'tracker' in request.endpoint %}active{% endif %}">
+          <a href="{{ url_for('tracker.daily_form') }}"><i class="fa-solid fa-calendar-check"></i> Daily Tracker</a>
+        </li>
+        <li class="nav-item {% if 'productivity' in request.endpoint %}active{% endif %}">
+          <a href="{{ url_for('productivity.analysis') }}"><i class="fa-solid fa-bolt"></i> Productivity ML</a>
+        </li>
+        <li class="nav-item {% if 'expenses' in request.endpoint %}active{% endif %}">
+          <a href="{{ url_for('expenses.index') }}"><i class="fa-solid fa-wallet"></i> Expense Manager</a>
+        </li>
+        <li class="nav-item {% if 'clustering' in request.endpoint %}active{% endif %}">
+          <a href="{{ url_for('clustering.index') }}"><i class="fa-solid fa-diagram-project"></i> Behavior Clusters</a>
+        </li>
+        <li class="nav-item {% if 'ai' in request.endpoint %}active{% endif %}">
+          <a href="{{ url_for('ai.index') }}"><i class="fa-solid fa-robot"></i> AI Life Assistant</a>
+        </li>
+        <li class="nav-item {% if 'profile' in request.endpoint %}active{% endif %}">
+          <a href="{{ url_for('profile.index') }}"><i class="fa-solid fa-user-gear"></i> Profile & Settings</a>
+        </li>
+      </ul>
+      
+      <div style="padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-outline" style="width: 100%;">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Shell -->
+    <main class="app-content">
+      <!-- Top Header Navbar -->
+      <header class="app-header">
+        <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+        <div class="header-user">
+          <a href="{{ url_for('profile.index') }}" class="user-badge">
+            <div class="user-avatar">{{ session.get('username', 'U')[0]|upper }}</div>
+            <span>{{ session.get('username', 'User') }}</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- Main Body Container -->
+      <div class="main-body">
+        <!-- Flash Alert Messages -->
+        <div class="flash-container">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span><i class="fa-solid fa-circle-info"></i> {{ message }}</span>
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+  {% else %}
+  <!-- Auth Shell -->
+  <div class="auth-page">
+    <div class="flash-container" style="position: absolute; top: 1.5rem; max-width: 440px; width: 100%;">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+    </div>
+    {% block auth_content %}{% endblock %}
+  </div>
+  {% endif %}
+
+  <!-- Core Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/ai_chat.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

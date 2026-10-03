@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Productivity ML Analytics & Evaluation{% endblock %}
+{% block page_title %}Productivity ML Engine & Model Metrics{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+  <!-- Model Evaluation Cards -->
+  <div class="col-8">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-square-poll-vertical" style="color: var(--accent-primary);"></i> Machine Learning Model Metrics</h3>
+        <form action="{{ url_for('productivity.train_models') }}" method="POST">
+          <button type="submit" class="btn btn-outline" style="font-size: 0.85rem;">
+            <i class="fa-solid fa-arrows-rotate"></i> Retrain ML Models
+          </button>
+        </form>
+      </div>
+
+      {% if eval_results and eval_results.status == 'success' %}
+      <div class="form-row" style="margin-bottom: 1.5rem;">
+        <!-- Regression Metrics -->
+        <div style="background: var(--bg-main); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          <h4 style="font-weight: 700; color: var(--accent-primary); margin-bottom: 0.75rem;">
+            <i class="fa-solid fa-chart-line"></i> Productivity Score Regression
+          </h4>
+          <p style="font-size: 0.9rem; color: var(--text-secondary);">Algorithm: <strong>RandomForestRegressor</strong></p>
+          <div style="display: flex; gap: 1.5rem; margin-top: 0.85rem;">
+            <div>
+              <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">MSE (Mean Squared Error)</span>
+              <strong style="font-size: 1.3rem; color: var(--text-primary);">{{ eval_results.regression_metrics.mse }}</strong>
+            </div>
+            <div>
+              <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">R² Score (Variance)</span>
+              <strong style="font-size: 1.3rem; color: var(--accent-primary);">{{ eval_results.regression_metrics.r2_score }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Classification Metrics -->
+        <div style="background: var(--bg-main); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          <h4 style="font-weight: 700; color: var(--accent-secondary); margin-bottom: 0.75rem;">
+            <i class="fa-solid fa-layer-group"></i> Productivity Tier Classification
+          </h4>
+          <p style="font-size: 0.9rem; color: var(--text-secondary);">Algorithm: <strong>RandomForestClassifier</strong></p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.85rem;">
+            <div>
+              <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Accuracy</span>
+              <strong style="font-size: 1.2rem;">{{ eval_results.classification_metrics.accuracy }}</strong>
+            </div>
+            <div>
+              <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Precision</span>
+              <strong style="font-size: 1.2rem;">{{ eval_results.classification_metrics.precision }}</strong>
+            </div>
+            <div>
+              <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Recall</span>
+              <strong style="font-size: 1.2rem;">{{ eval_results.classification_metrics.recall }}</strong>
+            </div>
+            <div>
+              <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">F1 Score</span>
+              <strong style="font-size: 1.2rem; color: var(--accent-secondary);">{{ eval_results.classification_metrics.f1_score }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="alert alert-warning">
+        {{ eval_results.message if eval_results else "Log more daily records to compute model evaluation metrics." }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Confusion Matrix Visual Plot -->
+  <div class="col-4">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-matrix" style="color: #8B5CF6;"></i> Confusion Matrix Plot</h3>
+      </div>
+      {% if eval_results and eval_results.confusion_matrix_plot %}
+      <div style="text-align: center; padding: 0.5rem;">
+        <img src="{{ eval_results.confusion_matrix_plot }}" alt="Productivity Level Confusion Matrix" style="max-width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      </div>
+      {% else %}
+      <p style="color: var(--text-muted); font-size: 0.9rem;">Confusion matrix plot will display after training with sufficient data.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

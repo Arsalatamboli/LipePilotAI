@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Daily Behaviour Clustering & PCA{% endblock %}
+{% block page_title %}Daily Behaviour Clustering (K-Means & PCA){% endblock %}
+
+{% block content %}
+<!-- Lifestyle Persona Cards Grid -->
+<div class="metrics-grid" style="margin-bottom: 2rem;">
+  {% for cid, label in cluster_labels.items() %}
+  <div class="card" style="margin-bottom: 0; border-top: 4px solid {{ label.color }};">
+    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+      <i class="fa-solid fa-shapes" style="font-size: 1.2rem; color: {{ label.color }};"></i>
+      <strong style="font-size: 1.05rem; color: var(--text-primary);">{{ label.name }}</strong>
+    </div>
+    <p style="font-size: 0.85rem; color: var(--text-secondary);">{{ label.desc }}</p>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- PCA 2D Scatter Plot Canvas Container -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fa-solid fa-diagram-project" style="color: var(--accent-secondary);"></i> PCA 2D Dimensionality Reduction Scatter Plot
+    </h3>
+    {% if clustering_result %}
+    <span class="badge badge-success">
+      Explained Variance: {{ "%.1f"|format(clustering_result.total_variance_explained) }}%
+    </span>
+    {% endif %}
+  </div>
+
+  {% if clustering_result and clustering_result.cluster_points %}
+  <div class="chart-container" style="height: 450px;">
+    <canvas id="pcaScatterChart"></canvas>
+  </div>
+  {% else %}
+  <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+    <i class="fa-solid fa-chart-scatter" style="font-size: 3rem; margin-bottom: 1rem; color: var(--border-color);"></i>
+    <p>No behavioural data yet. Log your daily metrics to discover your lifestyle pattern.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if clustering_result and clustering_result.cluster_points %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const points = {{ clustering_result.cluster_points|tojson }};
+    const ctx = document.getElementById('pcaScatterChart');
+    if (!ctx) return;
+
+    // Group points by cluster
+    const clusterDatasets = {};
+    points.forEach(pt => {
+      if (!clusterDatasets[pt.cluster_name]) {
+        clusterDatasets[pt.cluster_name] = {
+          label: pt.cluster_name,
+          data: [],
+          backgroundColor: pt.color,
+          borderColor: pt.color,
+          pointRadius: 6,
+          pointHoverRadius: 8
+        };
+      }
+      clusterDatasets[pt.cluster_name].data.push({
+        x: pt.pca_x,
+        y: pt.pca_y,
+        date: pt.record_date,
+        sleep: pt.sleep_hours,
+        work: pt.work_hours
+      });
+    });
+
+    new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: Object.values(clusterDatasets)
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { color: '#0F172A', font: { family: 'Inter', weight: '600' } } },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const raw = context.raw;
+                return `${context.dataset.label} (${raw.date}): Sleep ${raw.sleep}h, Work ${raw.work}h`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'PCA Component 1 (Principal Axis)', color: '#475569', font: { weight: '600' } },
+            grid: { color: '#E2E8F0' },
+            ticks: { color: '#475569' }
+          },
+          y: {
+            title: { display: true, text: 'PCA Component 2 (Secondary Axis)', color: '#475569', font: { weight: '600' } },
+            grid: { color: '#E2E8F0' },
+            ticks: { color: '#475569' }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endif %}
+{% endblock %}

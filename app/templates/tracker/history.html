@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Daily Log History{% endblock %}
+{% block page_title %}Daily Logs History{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title"><i class="fa-solid fa-list" style="color: var(--accent-secondary);"></i> Historical Daily Records</h3>
+    <a href="{{ url_for('tracker.daily_form') }}" class="btn btn-primary" style="font-size: 0.85rem;">
+      <i class="fa-solid fa-plus"></i> Log New Day
+    </a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Mood</th>
+          <th>Sleep</th>
+          <th>Work</th>
+          <th>Screen Time</th>
+          <th>Exercise</th>
+          <th>Stress (1-10)</th>
+          <th>Productivity Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td><strong>{{ r.record_date }}</strong></td>
+          <td>
+            <span class="badge {% if r.mood in ['Happy', 'Focused'] %}badge-success{% elif r.mood == 'Neutral' %}badge-info{% else %}badge-warning{% endif %}">
+              {{ r.mood }}
+            </span>
+          </td>
+          <td>{{ r.sleep_hours }} hrs</td>
+          <td>{{ r.work_hours }} hrs</td>
+          <td>{{ r.screen_time }} hrs</td>
+          <td>{{ r.exercise_mins }} mins</td>
+          <td>
+            <span class="badge {% if r.stress_level <= 4 %}badge-success{% elif r.stress_level <= 7 %}badge-warning{% else %}badge-danger{% endif %}">
+              {{ r.stress_level }}/10
+            </span>
+          </td>
+          <td>
+            <strong style="color: var(--accent-primary);">{{ r.productivity_score or 'N/A' }}</strong>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">No daily records yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
