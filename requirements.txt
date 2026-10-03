@@ -10,3 +10,4 @@ seaborn==0.13.2
 nltk==3.8.1
 joblib==1.4.2
 python-dotenv==1.0.1
+gunicorn
